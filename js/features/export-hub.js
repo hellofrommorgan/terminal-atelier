@@ -11,8 +11,8 @@
     .ex-meta .ex-file{color:var(--accent);font-weight:700}
   `);
 
-  const ANSI_ROLES = ['surface1', 'red', 'green', 'yellow', 'blue', 'pink', 'teal', 'subtext1',
-    'surface2', 'red', 'green', 'yellow', 'blue', 'pink', 'teal', 'text'];
+  const ANSI_ROLES = ['surface1', 'red', 'green', 'yellow', 'blue', 'mauve', 'teal', 'subtext1',
+    'surface2', 'maroon', 'green', 'peach', 'sapphire', 'pink', 'sky', 'text'];
   const TMUX_TYPES = {
     session: { icon: '▰', text: '#S' }, window_list: { icon: '◫', text: '#I:#W' }, directory: { icon: '', text: '#{pane_current_path}' },
     host: { icon: '󰒋', text: '#H' }, user: { icon: '', text: '#{user}' }, time: { icon: '', text: '%H:%M' }, date: { icon: '', text: '%Y-%m-%d' },
@@ -75,6 +75,24 @@
     arr.forEach(tag => { if (tag && tag !== 'lig') lines.push('font-feature = +' + tag); });
     return uniq(lines);
   }
+  function ansiColors(stateColors) { return ANSI_ROLES.map(role => cssRole(role, stateColors)); }
+  function cursorShape(style, fallback) {
+    const s = String(style || '').toLowerCase();
+    if (s === 'bar' || s === 'beam') return 'beam';
+    if (s === 'underline' || s === 'block') return s;
+    return fallback || 'beam';
+  }
+  function cursorBlink(cursor) { return bool(cursor && cursor.blink, false); }
+  function luaString(s) { return "'" + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
+  function hexToRgb01(hex) {
+    const h = cleanHex(hex, '#ffffff').slice(1);
+    return [0, 2, 4].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) / 255 * 1000000) / 1000000);
+  }
+  function itermColor(hex) {
+    const rgb = hexToRgb01(hex);
+    return { 'Red Component': rgb[0], 'Green Component': rgb[1], 'Blue Component': rgb[2], 'Color Space': 'sRGB' };
+  }
+
   function generateGhostty(ctx) {
     const font = ctx.get('font') || {};
     const cursor = ctx.get('cursor') || {};
@@ -187,6 +205,117 @@
     if (seg.type === 'exit_status') return ['disabled = false', 'format = ' + tomlString('[' + (seg.icon || d.icon) + ' $status]($style)')];
     return ['success_symbol = ' + tomlString('[' + (seg.icon || d.icon || '❯') + '](fg:' + (seg.fg || 'green') + ')'), 'error_symbol = ' + tomlString('[' + (seg.icon || d.icon || '❯') + '](fg:red)')];
   }
+  function generateKitty(ctx) {
+    const font = ctx.get('font') || {};
+    const cursor = ctx.get('cursor') || {};
+    const colors = (ctx.get('theme') || {}).colors || {};
+    const wght = Math.round(num(font.wght, 420));
+    const palette = ansiColors(colors);
+    const lines = [
+      '# Atelier export: kitty.conf',
+      'font_family ' + str(font.family, 'Geist Mono'),
+      'font_size ' + num(font.size, 15)
+    ];
+    if (font.variable !== false) lines.push('# Kitty cannot set arbitrary variable font weights in kitty.conf; Atelier design weight: ' + wght);
+    if (bool(font.italic, false)) lines.push('italic_font auto');
+    lines.push('bold_font auto');
+    lines.push('', '# cursor');
+    lines.push('cursor_shape ' + cursorShape(cursor.style, 'beam'));
+    lines.push('cursor_blink_interval ' + (cursorBlink(cursor) ? '0.5' : '0'));
+    lines.push('', '# theme');
+    lines.push('foreground ' + cssRole('text', colors));
+    lines.push('background ' + cssRole('base', colors));
+    lines.push('cursor ' + roleOrHex(cursor.color, colors, 'rosewater'));
+    lines.push('selection_foreground ' + cssRole('text', colors));
+    lines.push('selection_background ' + cssRole('surface0', colors));
+    palette.forEach((hex, i) => lines.push('color' + i + ' ' + hex));
+    return lines.join('\n') + '\n';
+  }
+  function generateAlacritty(ctx) {
+    const font = ctx.get('font') || {};
+    const cursor = ctx.get('cursor') || {};
+    const colors = (ctx.get('theme') || {}).colors || {};
+    const palette = ansiColors(colors);
+    const shape = { block: 'Block', beam: 'Beam', bar: 'Beam', underline: 'Underline' }[String(cursor.style || 'bar').toLowerCase()] || 'Beam';
+    const lines = [
+      '# Atelier export: alacritty.toml',
+      '[font]',
+      'size = ' + num(font.size, 15),
+      '',
+      '[font.normal]',
+      'family = ' + tomlString(str(font.family, 'Geist Mono')),
+      '',
+      '[colors.primary]',
+      'foreground = ' + tomlString(cssRole('text', colors)),
+      'background = ' + tomlString(cssRole('base', colors)),
+      '',
+      '[colors.cursor]',
+      'text = ' + tomlString(cssRole('base', colors)),
+      'cursor = ' + tomlString(roleOrHex(cursor.color, colors, 'rosewater')),
+      '',
+      '[colors.selection]',
+      'text = ' + tomlString(cssRole('text', colors)),
+      'background = ' + tomlString(cssRole('surface0', colors)),
+      '',
+      '[colors.normal]'
+    ];
+    ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'].forEach((name, i) => lines.push(name + ' = ' + tomlString(palette[i])));
+    lines.push('', '[colors.bright]');
+    ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'].forEach((name, i) => lines.push(name + ' = ' + tomlString(palette[i + 8])));
+    lines.push('', '[cursor]', '', '[cursor.style]', 'shape = ' + tomlString(shape), 'blinking = ' + tomlString(cursorBlink(cursor) ? 'Always' : 'Never'));
+    return lines.join('\n') + '\n';
+  }
+  function generateWezTerm(ctx) {
+    const font = ctx.get('font') || {};
+    const cursor = ctx.get('cursor') || {};
+    const colors = (ctx.get('theme') || {}).colors || {};
+    const palette = ansiColors(colors);
+    const shape = cursorShape(cursor.style, 'beam');
+    const cursorStyle = (cursorBlink(cursor) ? 'Blinking' : 'Steady') + (shape === 'block' ? 'Block' : shape === 'underline' ? 'Underline' : 'Bar');
+    const lines = [
+      '-- Atelier export: wezterm.lua',
+      "local wezterm = require 'wezterm'",
+      'local config = wezterm.config_builder()',
+      '',
+      'config.font = wezterm.font(' + luaString(str(font.family, 'Geist Mono')) + ')',
+      'config.font_size = ' + num(font.size, 15),
+      'config.default_cursor_style = ' + luaString(cursorStyle),
+      'config.colors = {',
+      '  foreground = ' + luaString(cssRole('text', colors)) + ',',
+      '  background = ' + luaString(cssRole('base', colors)) + ',',
+      '  cursor_bg = ' + luaString(roleOrHex(cursor.color, colors, 'rosewater')) + ',',
+      '  cursor_fg = ' + luaString(cssRole('base', colors)) + ',',
+      '  selection_fg = ' + luaString(cssRole('text', colors)) + ',',
+      '  selection_bg = ' + luaString(cssRole('surface0', colors)) + ',',
+      '  ansi = { ' + palette.slice(0, 8).map(luaString).join(', ') + ' },',
+      '  brights = { ' + palette.slice(8).map(luaString).join(', ') + ' },',
+      '}',
+      '',
+      'return config'
+    ];
+    return lines.join('\n') + '\n';
+  }
+  function generateITerm2(ctx) {
+    const font = ctx.get('font') || {};
+    const cursor = ctx.get('cursor') || {};
+    const theme = ctx.get('theme') || {};
+    const colors = theme.colors || {};
+    const palette = ansiColors(colors);
+    const profile = {
+      Name: 'Atelier ' + str(theme.name, 'Profile'),
+      Guid: 'atelier-dynamic-profile',
+      'Normal Font': str(font.family, 'Geist Mono') + ' ' + num(font.size, 15),
+      'Foreground Color': itermColor(cssRole('text', colors)),
+      'Background Color': itermColor(cssRole('base', colors)),
+      'Cursor Color': itermColor(roleOrHex(cursor.color, colors, 'rosewater')),
+      'Selection Color': itermColor(cssRole('surface0', colors)),
+      'Selected Text Color': itermColor(cssRole('text', colors)),
+      'Cursor Type': ({ block: 0, beam: 1, bar: 1, underline: 2 }[String(cursor.style || 'bar').toLowerCase()] || 1)
+    };
+    palette.forEach((hex, i) => { profile['Ansi ' + i + ' Color'] = itermColor(hex); });
+    return JSON.stringify({ Profiles: [profile] }, null, 2) + '\n';
+  }
+
   function generateStarship(ctx) {
     const prompt = ctx.get('prompt') || {};
     let segs = promptSegments(prompt);
@@ -281,6 +410,10 @@
         try {
           files = [
             { id: 'ghostty', label: 'Ghostty', filename: 'config', path: '~/.config/ghostty/config', text: generateGhostty(ctx) },
+            { id: 'kitty', label: 'Kitty', filename: 'kitty.conf', path: '~/.config/kitty/kitty.conf', text: generateKitty(ctx) },
+            { id: 'alacritty', label: 'Alacritty', filename: 'alacritty.toml', path: '~/.config/alacritty/alacritty.toml', text: generateAlacritty(ctx) },
+            { id: 'wezterm', label: 'WezTerm', filename: 'wezterm.lua', path: '~/.config/wezterm/wezterm.lua', text: generateWezTerm(ctx) },
+            { id: 'iterm2', label: 'iTerm2', filename: 'iterm2-dynamic-profile.json', path: '~/Library/Application Support/iTerm2/DynamicProfiles/atelier.json', text: generateITerm2(ctx) },
             { id: 'tmux', label: 'tmux.conf', filename: '.tmux.conf', path: '~/.tmux.conf', text: generateTmux(ctx) },
             { id: 'starship', label: 'starship.toml', filename: 'starship.toml', path: '~/.config/starship.toml', text: generateStarship(ctx) }
           ];

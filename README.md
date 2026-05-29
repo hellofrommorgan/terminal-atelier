@@ -15,12 +15,17 @@ Styled after a [Ghostty](https://ghostty.org) window running tmux, in the
   (ligatures, stylistic sets, tabular numerals, fractions), size, line-height,
   tracking and italics. Bring your own font: type any installed font name or
   drop in a `.woff2`/`.woff`/`.ttf`/`.otf` file.
-- **Theme Studio** — edit the full Catppuccin-style palette live.
+- **Theme Studio** — edit the full Catppuccin-style palette live, pick from a
+  curated library (Catppuccin, Gruvbox, Nord, Tokyo Night, Dracula, Solarized,
+  Rosé Pine and more), check WCAG contrast and simulate colorblindness.
 - **Prompt Builder** — compose a powerline-style shell prompt segment by segment.
+- **A/B Compare** — put two font/weight setups side by side to judge them.
 - **Keybind Designer** — map and inspect terminal/tmux keybindings.
 - **tmux Status Bar** — configure and export a `tmux.conf` status line.
-- **Glyph Explorer**, **Layout Designer**, **Cursor Studio**, **Export Configs**,
-  **Rigs & Share**, and a command palette.
+- **Glyph Explorer**, **Layout Designer**, **Cursor Studio**, **Export Configs**
+  (Ghostty, Kitty, Alacritty, WezTerm, iTerm2), **Rigs & Share**, and a command palette.
+- **Live preview scenes** — code, neovim, lazygit, htop and git-diff mock sessions.
+- **Undo / redo** (⌘Z / ⌘⇧Z) with a live "edits vs defaults" indicator and one-click reset.
 - **Persistent live preview** dock that reflects every change across all panels.
 - **Progressive disclosure** — a guided *Simple* mode and a full *Expert* mode.
 - Fully responsive; fills the viewport and reflows down to mobile.

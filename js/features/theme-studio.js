@@ -6,6 +6,7 @@
 
   const PALETTES = [
     { name: 'Catppuccin Mocha', colors: { crust:'#11111b', mantle:'#181825', base:'#1e1e2e', surface0:'#313244', surface1:'#45475a', surface2:'#585b70', overlay0:'#6c7086', overlay1:'#7f849c', overlay2:'#9399b2', subtext0:'#a6adc8', subtext1:'#bac2de', text:'#cdd6f4', rosewater:'#f5e0dc', flamingo:'#f2cdcd', pink:'#f5c2e7', mauve:'#cba6f7', red:'#f38ba8', maroon:'#eba0ac', peach:'#fab387', yellow:'#f9e2af', green:'#a6e3a1', teal:'#94e2d5', sky:'#89dceb', sapphire:'#74c7ec', blue:'#89b4fa', lavender:'#b4befe', accent:'#cba6f7' } },
+    { name: 'Catppuccin Frappé', colors: { crust:'#232634', mantle:'#292c3c', base:'#303446', surface0:'#414559', surface1:'#51576d', surface2:'#626880', overlay0:'#737994', overlay1:'#838ba7', overlay2:'#949cbb', subtext0:'#a5adce', subtext1:'#b5bfe2', text:'#c6d0f5', rosewater:'#f2d5cf', flamingo:'#eebebe', pink:'#f4b8e4', mauve:'#ca9ee6', red:'#e78284', maroon:'#ea999c', peach:'#ef9f76', yellow:'#e5c890', green:'#a6d189', teal:'#81c8be', sky:'#99d1db', sapphire:'#85c1dc', blue:'#8caaee', lavender:'#babbf1', accent:'#ca9ee6' } },
     { name: 'Catppuccin Macchiato', colors: { crust:'#181926', mantle:'#1e2030', base:'#24273a', surface0:'#363a4f', surface1:'#494d64', surface2:'#5b6078', overlay0:'#6e738d', overlay1:'#8087a2', overlay2:'#939ab7', subtext0:'#a5adcb', subtext1:'#b8c0e0', text:'#cad3f5', rosewater:'#f4dbd6', flamingo:'#f0c6c6', pink:'#f5bde6', mauve:'#c6a0f6', red:'#ed8796', maroon:'#ee99a0', peach:'#f5a97f', yellow:'#eed49f', green:'#a6da95', teal:'#8bd5ca', sky:'#91d7e3', sapphire:'#7dc4e4', blue:'#8aadf4', lavender:'#b7bdf8', accent:'#c6a0f6' } },
     { name: 'Catppuccin Latte', colors: { crust:'#dce0e8', mantle:'#e6e9ef', base:'#eff1f5', surface0:'#ccd0da', surface1:'#bcc0cc', surface2:'#acb0be', overlay0:'#9ca0b0', overlay1:'#8c8fa1', overlay2:'#7c7f93', subtext0:'#6c6f85', subtext1:'#5c5f77', text:'#4c4f69', rosewater:'#dc8a78', flamingo:'#dd7878', pink:'#ea76cb', mauve:'#8839ef', red:'#d20f39', maroon:'#e64553', peach:'#fe640b', yellow:'#df8e1d', green:'#40a02b', teal:'#179299', sky:'#04a5e5', sapphire:'#209fb5', blue:'#1e66f5', lavender:'#7287fd', accent:'#8839ef' } },
     { name: 'Tokyo Night', colors: { crust:'#0f0f14', mantle:'#16161e', base:'#1a1b26', surface0:'#24283b', surface1:'#292e42', surface2:'#3b4261', overlay0:'#565f89', overlay1:'#737aa2', overlay2:'#9aa5ce', subtext0:'#a9b1d6', subtext1:'#c0caf5', text:'#c0caf5', rosewater:'#f4b8e4', flamingo:'#ff9e64', pink:'#bb9af7', mauve:'#9d7cd8', red:'#f7768e', maroon:'#db4b4b', peach:'#ff9e64', yellow:'#e0af68', green:'#9ece6a', teal:'#73daca', sky:'#7dcfff', sapphire:'#2ac3de', blue:'#7aa2f7', lavender:'#b4f9f8', accent:'#7aa2f7' } },
@@ -52,6 +53,23 @@
 @media(max-width:720px){.ts-meter{grid-template-columns:1fr}.ts-meter .row-flex{justify-content:flex-start}}
   `);
 
+  App.injectCSS('theme-studio-a11y', `
+.ts-library{display:grid;grid-template-columns:1fr;gap:8px}
+.ts-library .ts-card{min-height:64px}
+.ts-library .ts-swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.ts-library .ts-swatch{width:auto;height:20px}
+.ts-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.ts-badges .tag-pill{font-size:9px;padding:2px 6px}
+.ts-cb-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.ts-cb-controls select{max-width:180px}
+.ts-cb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;padding:10px;border:1px solid var(--surface0);border-radius:var(--radius);background:var(--base)}
+.ts-cb-grid.protanopia{filter:url(#ts-protanopia)}
+.ts-cb-grid.deuteranopia{filter:url(#ts-deuteranopia)}
+.ts-cb-grid.tritanopia{filter:url(#ts-tritanopia)}
+.ts-cb-cell{min-height:48px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(0,0,0,.16);display:flex;align-items:flex-end;padding:5px;font-size:9px;font-weight:700;color:var(--crust);text-shadow:0 1px 1px rgba(255,255,255,.24)}
+@media(max-width:720px){.ts-badges{justify-content:flex-start}}
+  `);
+
   function cloneColors(colors) {
     const out = {};
     PALETTE_KEYS.forEach(k => out[k] = colors[k]);
@@ -68,8 +86,20 @@
   }
   function setTheme(ctx, name, colors) {
     const next = cloneColors(colors);
-    ctx.applyTheme(next);
-    ctx.set('theme', { name, colors: next });
+    ctx.set('theme.name', name);
+    ctx.set('theme.colors', next);
+    ctx.applyTheme(ctx.get('theme.colors'));
+  }
+  function resolvedColor(ctx, colors, key) {
+    const inline = cleanHex(colors && colors[key]);
+    if (inline !== '#000000' || /^#000000$/i.test((colors && colors[key]) || '')) return inline;
+    const css = getComputedStyle(document.documentElement).getPropertyValue('--' + key).trim();
+    return cleanHex(css);
+  }
+  function resolvedColors(ctx, colors) {
+    const out = {};
+    PALETTE_KEYS.forEach(k => out[k] = resolvedColor(ctx, colors || {}, k));
+    return out;
   }
   function hexToRgb(hex) {
     const h = cleanHex(hex).slice(1);
@@ -86,17 +116,43 @@
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
   }
   function badge(h, ok, text) { return h('span', { class: 'tag-pill ' + (ok ? 'on' : 'off') }, text); }
+  function injectColorblindFilters() {
+    if (document.getElementById('ts-colorblind-filters')) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('id', 'ts-colorblind-filters');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('width', '0');
+    svg.setAttribute('height', '0');
+    svg.style.position = 'absolute';
+    svg.style.width = '0';
+    svg.style.height = '0';
+    svg.style.overflow = 'hidden';
+    svg.innerHTML = '<defs>' +
+      '<filter id="ts-protanopia"><feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0"/></filter>' +
+      '<filter id="ts-deuteranopia"><feColorMatrix type="matrix" values="0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0"/></filter>' +
+      '<filter id="ts-tritanopia"><feColorMatrix type="matrix" values="0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0"/></filter>' +
+      '</defs>';
+    document.body.appendChild(svg);
+  }
 
   App.registerFeature({
     id: 'theme-studio', title: 'Theme Studio', icon: '◑', order: 20,
     subtitle: 'Swap palettes. Fine-tune every color. Check WCAG contrast — all live.',
     mount(el, ctx) {
       const { h, subscribe } = ctx;
-      const themeGrid = h('div', { class: 'grid ts-themes' });
+      const themeGrid = h('div', { class: 'grid ts-themes ts-library' });
       const editor = h('div', { class: 'ts-editor' });
       const accentRow = h('div', { class: 'btn-row' });
       const contrastBox = h('div', { class: 'ts-contrast' });
+      const colorblindSelect = h('select', { 'aria-label': 'colorblind simulation' },
+        h('option', { value: 'none' }, 'None'),
+        h('option', { value: 'protanopia' }, 'Protanopia'),
+        h('option', { value: 'deuteranopia' }, 'Deuteranopia'),
+        h('option', { value: 'tritanopia' }, 'Tritanopia'));
+      const colorblindGrid = h('div', { class: 'ts-cb-grid' });
       const codeBox = h('pre', { class: 'codeblock' });
+      injectColorblindFilters();
 
       function applyEdit(key, value) {
         const t = currentTheme(ctx);
@@ -112,11 +168,18 @@
         return ':root {\n' + PALETTE_KEYS.map(k => `  --${k}: ${colors[k]};`).join('\n') + '\n}';
       }
       function renderContrast(colors) {
+        const resolved = resolvedColors(ctx, colors);
         contrastBox.innerHTML = '';
         [
-          ['text on base', colors.text, colors.base],
-          ['subtext1 on surface0', colors.subtext1, colors.surface0],
-          ['accent on base', colors.accent, colors.base]
+          ['text on base', resolved.text, resolved.base],
+          ['subtext1 on base', resolved.subtext1, resolved.base],
+          ['red on base', resolved.red, resolved.base],
+          ['green on base', resolved.green, resolved.base],
+          ['yellow on base', resolved.yellow, resolved.base],
+          ['blue on base', resolved.blue, resolved.base],
+          ['mauve on base', resolved.mauve, resolved.base],
+          ['teal on base', resolved.teal, resolved.base],
+          ['peach on base', resolved.peach, resolved.base]
         ].forEach(([label, fg, bg]) => {
           const r = contrast(fg, bg);
           const pct = Math.max(0, Math.min(100, ((r - 1) / 20) * 100));
@@ -128,17 +191,30 @@
                 h('span', { class: 'ts-tick ts-aa' }, h('b', {}, 'AA')),
                 h('span', { class: 'ts-tick ts-aaa' }, h('b', {}, 'AAA'))),
               h('div', { class: 'ts-scale' }, h('span', {}, '1:1'), h('span', {}, '21:1'))),
-            h('div', { class: 'row-flex' }, h('span', { class: 'ts-ratio tnum' }, r.toFixed(2) + ' : 1'), badge(h, r >= 4.5, 'AA'), badge(h, r >= 7, 'AAA'))));
+            h('div', { class: 'ts-badges' },
+              h('span', { class: 'ts-ratio tnum' }, r.toFixed(1) + ':1'),
+              badge(h, r >= 4.5, 'AA'),
+              badge(h, r >= 3, 'AA large'),
+              badge(h, r >= 7, 'AAA'))));
         });
         contrastBox.appendChild(h('div', { class: 'preview-surface ts-preview' },
-          h('div', {}, 'atelier theme preview · ', h('span', { class: 'ts-accent' }, 'accent command')), 
+          h('div', {}, 'atelier theme preview · ', h('span', { class: 'ts-accent' }, 'accent command')),
           h('div', { class: 'ts-sub' }, 'Subtext against the active surface shows how panels, nav, and hints will read.')));
+      }
+      function renderColorblindPreview(colors) {
+        const resolved = resolvedColors(ctx, colors);
+        const mode = colorblindSelect.value || 'none';
+        colorblindGrid.className = 'ts-cb-grid' + (mode === 'none' ? '' : ' ' + mode);
+        colorblindGrid.innerHTML = '';
+        ['base','surface0','text','mauve','red','peach','yellow','green','teal','blue','lavender','accent'].forEach(key => {
+          colorblindGrid.appendChild(h('div', { class: 'ts-cb-cell', title: key + ' ' + resolved[key], style: { background: resolved[key] } }, key));
+        });
       }
       function render() {
         const t = currentTheme(ctx);
         themeGrid.innerHTML = '';
         PALETTES.forEach(p => {
-          const swatchKeys = ['base','surface0','text','mauve','red','peach','yellow','green','teal','blue','lavender'];
+          const swatchKeys = ['base','surface0','text','mauve','green','red'];
           themeGrid.appendChild(h('div', { class: 'card ts-card' + (t.name === p.name ? ' ts-selected' : ''), onclick: () => setTheme(ctx, p.name, p.colors) },
             h('div', { class: 'ts-card-head' }, h('span', {}, p.name), t.name === p.name ? h('small', {}, 'active') : null),
             h('div', { class: 'ts-swatches' }, swatchKeys.map(k => h('i', { class: 'ts-swatch', title: k, style: { background: p.colors[k] } })))));
@@ -154,20 +230,25 @@
         ACCENT_KEYS.forEach(key => accentRow.appendChild(h('span', { class: 'chip' + (cleanHex(t.colors.accent) === cleanHex(t.colors[key]) ? ' on' : ''), onclick: () => applyAccent(key) }, key)));
 
         renderContrast(t.colors);
+        renderColorblindPreview(t.colors);
         codeBox.textContent = varsText(t.colors);
       }
+
+      colorblindSelect.addEventListener('change', () => renderColorblindPreview(currentTheme(ctx).colors));
 
       const shuffle = h('span', { class: 'btn', onclick: () => applyAccent(ACCENT_KEYS[Math.floor(Math.random() * ACCENT_KEYS.length)]) }, 'shuffle accent');
       const copyBtn = h('span', { class: 'btn primary', onclick: () => ctx.copy(varsText(currentTheme(ctx).colors)) }, 'copy CSS vars');
       const downloadBtn = h('span', { class: 'btn ghost', onclick: () => ctx.download('atelier-theme.css', varsText(currentTheme(ctx).colors)) }, 'download');
 
       el.appendChild(h('div', { class: 'stack' },
-        h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '01'), ' built-in palettes'), themeGrid),
+        h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '01'), ' curated palette library'), themeGrid),
         h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '02'), ' contrast checker'), contrastBox),
+        h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '03'), ' colorblind simulation'),
+          h('div', { class: 'ts-cb-controls' }, h('span', { class: 'dim' }, 'simulate'), colorblindSelect), colorblindGrid),
         h('div', { class: 'split adv-only' },
           h('div', { class: 'stack' },
-            h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '03'), ' custom editor'), editor),
-            h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '04'), ' accent'), accentRow, h('hr', { class: 'sep' }), h('div', { class: 'row-flex ts-actions' }, shuffle, copyBtn, downloadBtn))),
+            h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '04'), ' custom editor'), editor),
+            h('div', { class: 'card' }, h('h4', {}, h('span', { class: 'accent' }, '05'), ' accent'), accentRow, h('hr', { class: 'sep' }), h('div', { class: 'row-flex ts-actions' }, shuffle, copyBtn, downloadBtn))),
           codeBox)));
 
       subscribe('theme', render);

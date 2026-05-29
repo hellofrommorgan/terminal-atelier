@@ -104,11 +104,103 @@ window.App = (function () {
       try{ s.cb(get(s.path), path); }catch(e){ console.error(e); }
     }});
   }
-  function set(path, value){ setRaw(path, value); syncPreview(); persist(); notify(path); }
+  // Features lazily seed starter content (default prompt segments, tmux bar,
+  // keybinds, …) on first mount. Those writes happen inside App.withSeed(),
+  // are NOT user edits, and must not pollute undo history or the diff readout.
+  let seeding = 0;
+  function withSeed(fn){ seeding++; try { return fn(); } finally { seeding--; } }
+  function setOn(obj, path, value){
+    const keys = path.split('.'); let o = obj;
+    for (let i=0;i<keys.length-1;i++){ if (o[keys[i]]==null||typeof o[keys[i]]!=='object') o[keys[i]]={}; o=o[keys[i]]; }
+    o[keys[keys.length-1]] = deepClone(value);
+  }
+  function set(path, value){
+    setRaw(path, value); syncPreview(); persist(); notify(path);
+    if (seeding){
+      // starting content: fold into the baseline AND every existing history
+      // snapshot so it's never treated as an edit nor reverted by undo.
+      setOn(diffBaseline, path, value);
+      history.forEach(snap => setOn(snap, path, value));
+    } else recordHistory(path);
+  }
   function update(path, fn){ set(path, fn(get(path))); }
   function subscribe(path, cb){ subs.push({path:path||'', cb}); return ()=>{ const i=subs.findIndex(s=>s.cb===cb); if(i>=0)subs.splice(i,1); }; }
-  function replaceState(next){ state = deepMerge(deepClone(DEFAULTS), next||{}); applyTheme(get('theme.colors')); syncPreview(); persist(); notify(''); }
-  function resetState(){ state = deepClone(DEFAULTS); applyTheme(null); syncPreview(); persist(); notify(''); }
+  function replaceState(next){ state = deepMerge(deepClone(DEFAULTS), next||{}); applyTheme(get('theme.colors')); syncPreview(); persist(); notify(''); diffBaseline = deepClone(state); recordHistory('', true); }
+  function resetState(){ state = deepClone(DEFAULTS); applyTheme(null); syncPreview(); persist(); notify(''); diffBaseline = deepClone(DEFAULTS); recordHistory('', true); }
+
+  // ---- undo / redo history --------------------------------------------------
+  // We snapshot the *editable* config only; UI prefs (mode/onboarding/dock) and
+  // the saved-rigs library are intentionally excluded so they never get undone.
+  const HIST_MAX = 100;
+  function histSnapshot(){ const s = deepClone(state); delete s.ui; delete s.rigs; return s; }
+  function histSame(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
+  let history = [histSnapshot()];
+  let hi = 0;            // index of the currently-applied snapshot
+  let restoring = false; // suppress recording while we apply a snapshot
+  let histTimer = null;
+  function pushSnapshot(){
+    const snap = histSnapshot();
+    if (histSame(snap, history[hi])) return;
+    history = history.slice(0, hi + 1);
+    history.push(snap);
+    if (history.length > HIST_MAX) history.shift();
+    hi = history.length - 1;
+    bus.emit('history:changed', { canUndo: hi > 0, canRedo: false });
+  }
+  function recordHistory(path, immediate){
+    if (restoring) return;
+    if (path && (path === 'ui' || path.startsWith('ui.') || path === 'rigs' || path.startsWith('rigs'))) return;
+    clearTimeout(histTimer);
+    if (immediate){ pushSnapshot(); return; }
+    histTimer = setTimeout(pushSnapshot, 280);   // coalesce slider/typing bursts
+  }
+  function applySnapshot(snap){
+    restoring = true;
+    const keepUi = state.ui, keepRigs = state.rigs;
+    state = deepMerge(deepClone(DEFAULTS), snap);
+    state.ui = keepUi; state.rigs = keepRigs;
+    applyTheme(get('theme.colors')); syncPreview(); persist(); notify('');
+    restoring = false;
+    bus.emit('history:changed', { canUndo: hi > 0, canRedo: hi < history.length - 1 });
+  }
+  function undo(){
+    clearTimeout(histTimer); pushSnapshot();   // flush any pending edit first
+    if (hi <= 0) return false;
+    hi--; applySnapshot(history[hi]); return true;
+  }
+  function redo(){
+    if (hi >= history.length - 1) return false;
+    hi++; applySnapshot(history[hi]); return true;
+  }
+  function canUndo(){ return hi > 0; }
+  function canRedo(){ return hi < history.length - 1; }
+
+  // ---- diff vs defaults -----------------------------------------------------
+  const DIFF_SECTIONS = {
+    font: 'font', theme: 'theme', prompt: 'prompt', keybinds: 'keybinds',
+    tmux: 'tmux', cursor: 'cursor', layout: 'layout'
+  };
+  let diffBaseline = deepClone(DEFAULTS);   // starting point (DEFAULTS + seeded content)
+  function canon(v){
+    if (Array.isArray(v)) return '['+v.map(canon).join(',')+']';
+    if (v && typeof v === 'object') return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
+    return JSON.stringify(v);
+  }
+  function diffFromDefaults(){
+    const items = [];
+    for (const key in DIFF_SECTIONS){
+      if (key === 'font'){
+        for (const fk in DEFAULTS.font){
+          const base = (diffBaseline.font ? diffBaseline.font[fk] : DEFAULTS.font[fk]);
+          if (canon(get('font.'+fk)) !== canon(base))
+            items.push({ path: 'font.'+fk, label: 'font · '+fk });
+        }
+      } else if (canon(get(key)) !== canon(diffBaseline[key])){
+        items.push({ path: key, label: DIFF_SECTIONS[key] });
+      }
+    }
+    return { count: items.length, items };
+  }
 
   // ---- event bus ------------------------------------------------------------
   const handlers = {};
@@ -261,6 +353,8 @@ window.App = (function () {
     next.ui = state.ui;                              // presets never change mode/onboarding
     state = next;
     applyTheme(get('theme.colors')); syncPreview(); persist(); notify('');
+    diffBaseline = deepClone(state);
+    recordHistory('', true);
     bus.emit('preset:applied', preset.id);
   }
 
@@ -277,5 +371,6 @@ window.App = (function () {
   return { registerFeature, getFeatures, getVisibleFeatures, get, set, update, subscribe, bus, injectCSS, toast, copy, download,
            applyTheme, fmtFeatures, syncPreview, h, ctx, replaceState, resetState,
            getMode, setMode, applyMode, applyPreset, isFirstRun, markOnboarded,
+           undo, redo, canUndo, canRedo, diffFromDefaults, withSeed,
            get state(){ return state; }, DEFAULTS, PALETTE_KEYS, PRESETS, PALETTES, CORE_FEATURES };
 })();

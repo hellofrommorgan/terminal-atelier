@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Atelier · dev-environment configurator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e1e2e'/%3E%3Ctext x='16' y='22' font-size='18' text-anchor='middle' fill='%23cba6f7'%3E%E2%97%86%3C/text%3E%3C/svg%3E">
 
 <style>
 @font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
@@ -25,6 +26,9 @@
     <div class="brand"><span class="glyph">◆</span> atelier</div>
     <span class="muted" style="font-size:11px">— terminal configurator</span>
     <div class="grow"></div>
+    <div class="hist-seg" id="hist-seg">
+      <button id="btn-undo" title="Undo (⌘Z)" disabled>↶</button><button id="btn-redo" title="Redo (⌘⇧Z)" disabled>↷</button>
+    </div>
     <div class="mode-seg" id="mode-seg" title="Simple shows essentials · Expert shows every tool">
       <button data-mode="novice">◐ Simple</button><button data-mode="expert">◆ Expert</button>
     </div>
@@ -53,6 +57,7 @@
     <div class="grow"></div>
     <div class="right">
       <div class="seg save" id="sb-save" style="opacity:.35"> ✓ saved </div>
+      <div class="seg info" id="sb-diff" title="Changes from defaults — click to reset" style="display:none; cursor:pointer"> ● 0 edits </div>
       <div class="seg info"> dev@studio </div>
       <div class="seg clock" id="sb-clock"> 00:00 </div>
     </div>
@@ -64,6 +69,7 @@
 <script defer src="js/core.js"></script>
 <!-- feature modules (each self-registers) -->
 <script defer src="js/features/font-playground.js"></script>
+<script defer src="js/features/ab-compare.js"></script>
 <script defer src="js/features/theme-studio.js"></script>
 <script defer src="js/features/prompt-builder.js"></script>
 <script defer src="js/features/keybind-designer.js"></script>

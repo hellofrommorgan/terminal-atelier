@@ -31,6 +31,15 @@
 
     // keyboard: 1-9 jump (visible set), [ ] cycle (visible set)
     document.addEventListener('keydown', (e) => {
+      // undo / redo work even while typing in inputs (standard editor behavior)
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (e.shiftKey) { if (App.redo()) e.preventDefault(); }
+        else { if (App.undo()) e.preventDefault(); }
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || e.key === 'Y')) {
+        if (App.redo()) e.preventDefault(); return;
+      }
       if (e.target.matches('input,textarea,select,[contenteditable="true"]')) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const feats = visible();
@@ -55,6 +64,7 @@
 
     startClock();
     wireSaveIndicator();
+    wireHistory();
     maybeOnboard();
   }
 
@@ -117,7 +127,7 @@
         if (f.subtitle) panel.appendChild(h('div', { class: 'pg-sub' }, f.subtitle));
         const body = h('div', { class: 'feature-body' });
         panel.appendChild(body);
-        f.mount(body, App.ctx());
+        App.withSeed(() => f.mount(body, App.ctx()));
       } catch (err) {
         console.error('mount failed', id, err);
         panel.appendChild(h('div', { class: 'codeblock' }, 'mount error: ' + err.message));
@@ -242,6 +252,37 @@
     if (!el) return;
     App.bus.on('saved', () => { el.textContent = ' ✓ saved '; el.style.opacity = '1';
       clearTimeout(el._t); el._t = setTimeout(() => el.style.opacity = '.35', 1200); });
+  }
+
+  function wireHistory() {
+    const undoBtn = document.getElementById('btn-undo');
+    const redoBtn = document.getElementById('btn-redo');
+    const diff = document.getElementById('sb-diff');
+    if (undoBtn) undoBtn.addEventListener('click', () => App.undo());
+    if (redoBtn) redoBtn.addEventListener('click', () => App.redo());
+    if (diff) diff.addEventListener('click', () => {
+      const d = App.diffFromDefaults();
+      if (!d.count) return;
+      if (confirm('Reset all ' + d.count + ' customization' + (d.count === 1 ? '' : 's') + ' back to defaults?'))
+        App.resetState();
+    });
+    function paint() {
+      if (undoBtn) undoBtn.disabled = !App.canUndo();
+      if (redoBtn) redoBtn.disabled = !App.canRedo();
+      if (diff) {
+        const d = App.diffFromDefaults();
+        if (d.count) {
+          diff.style.display = '';
+          diff.textContent = ' ● ' + d.count + ' edit' + (d.count === 1 ? '' : 's') + ' ';
+          diff.title = 'Changed from defaults: ' + d.items.map(i => i.label).join(', ') + ' — click to reset';
+        } else {
+          diff.style.display = 'none';
+        }
+      }
+    }
+    App.bus.on('history:changed', paint);
+    App.subscribe('', paint);
+    paint();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
