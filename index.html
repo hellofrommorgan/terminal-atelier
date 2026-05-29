@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier · dev-environment configurator</title>
+
+<style>
+@font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Italic-Variable.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:"Geist Sans";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Geist Sans";src:url("fonts/Geist-Italic-Variable.woff2") format("woff2");font-weight:100 900;font-style:italic;font-display:swap}
+@font-face{font-family:"Geist Pixel Circle";src:url("fonts/GeistPixel-Circle.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Geist Pixel Grid";src:url("fonts/GeistPixel-Grid.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Geist Pixel Line";src:url("fonts/GeistPixel-Line.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Geist Pixel Square";src:url("fonts/GeistPixel-Square.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Geist Pixel Triangle";src:url("fonts/GeistPixel-Triangle.woff2") format("woff2");font-display:swap}
+</style>
+<link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+    <div class="brand"><span class="glyph">◆</span> atelier</div>
+    <span class="muted" style="font-size:11px">— terminal configurator</span>
+    <div class="grow"></div>
+    <div class="mode-seg" id="mode-seg" title="Simple shows essentials · Expert shows every tool">
+      <button data-mode="novice">◐ Simple</button><button data-mode="expert">◆ Expert</button>
+    </div>
+    <div class="hint">jump <span class="kbd">1</span>–<span class="kbd">9</span> · cycle <span class="kbd">[</span> <span class="kbd">]</span> · palette <span class="kbd">⌘K</span></div>
+  </div>
+
+  <div class="shell">
+    <nav class="nav" id="nav">
+      <div class="nav-head">configure</div>
+    </nav>
+    <div class="main" id="main"></div>
+    <aside class="preview-dock" id="preview-dock">
+      <div class="preview-dock-head">
+        <span class="pd-title"><span class="pd-glyph">▮</span> live preview</span>
+        <span class="grow"></span>
+        <button class="pd-collapse" id="pd-collapse" title="Hide live preview">⇥</button>
+      </div>
+      <div class="preview-dock-body" id="preview-dock-body"></div>
+    </aside>
+    <button class="pd-reopen" id="pd-reopen" title="Show live preview">◀ preview</button>
+  </div>
+
+  <div class="statusbar">
+    <div class="seg session"> atelier </div>
+    <div class="seg info" id="sb-feature"> ready </div>
+    <div class="grow"></div>
+    <div class="right">
+      <div class="seg save" id="sb-save" style="opacity:.35"> ✓ saved </div>
+      <div class="seg info"> dev@studio </div>
+      <div class="seg clock" id="sb-clock"> 00:00 </div>
+    </div>
+  </div>
+</div>
+<div id="toast-host"></div>
+
+<!-- core first -->
+<script defer src="js/core.js"></script>
+<!-- feature modules (each self-registers) -->
+<script defer src="js/features/font-playground.js"></script>
+<script defer src="js/features/theme-studio.js"></script>
+<script defer src="js/features/prompt-builder.js"></script>
+<script defer src="js/features/keybind-designer.js"></script>
+<script defer src="js/features/tmux-status.js"></script>
+<script defer src="js/features/export-hub.js"></script>
+<!-- live preview: mounted by the shell into the persistent dock, not a nav panel -->
+<script defer src="js/features/mock-session.js"></script>
+<script defer src="js/features/glyph-explorer.js"></script>
+<script defer src="js/features/layout-designer.js"></script>
+<script defer src="js/features/cursor-studio.js"></script>
+<script defer src="js/features/command-palette.js"></script>
+<script defer src="js/features/presets-share.js"></script>
+<!-- shell last: builds nav from whatever registered -->
+<script defer src="js/app.js"></script>
+
+<script defer>
+/* tiny bridge: reflect active feature title into the status bar */
+window.addEventListener('DOMContentLoaded',()=>{ if(!window.App)return;
+  App.bus.on('feature:shown',d=>{ const f=App.getFeatures().find(x=>x.id===d.id);
+    const el=document.getElementById('sb-feature'); if(el&&f) el.textContent=' '+f.title+' '; }); });
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+/* ============================================================================
+   FORGE — shared base stylesheet + TUI component library
+   Theme variables are overridden live by the theme-studio module.
+   Feature modules should COMPOSE these components and only inject small,
+   feature-scoped CSS for anything bespoke.
+   ============================================================================ */
+
+:root{
+  /* catppuccin mocha (default theme — theme-studio overwrites these) */
+  --crust:#11111b; --mantle:#181825; --base:#1e1e2e;
+  --surface0:#313244; --surface1:#45475a; --surface2:#585b70;
+  --overlay0:#6c7086; --overlay1:#7f849c; --overlay2:#9399b2;
+  --subtext0:#a6adc8; --subtext1:#bac2de; --text:#cdd6f4;
+  --rosewater:#f5e0dc; --flamingo:#f2cdcd; --pink:#f5c2e7; --mauve:#cba6f7;
+  --red:#f38ba8; --maroon:#eba0ac; --peach:#fab387; --yellow:#f9e2af;
+  --green:#a6e3a1; --teal:#94e2d5; --sky:#89dceb; --sapphire:#74c7ec;
+  --blue:#89b4fa; --lavender:#b4befe;
+  --accent:var(--mauve);
+
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Geist Sans",-apple-system,system-ui,sans-serif;
+
+  /* live preview vars — core.js keeps these in sync with state.font.
+     any element with class="preview-surface" renders in the configured style */
+  --pv-family:"Geist Mono"; --pv-wght:420; --pv-size:15px; --pv-lh:1.5;
+  --pv-tracking:0em; --pv-style:normal; --pv-feat:"liga" 0,"calt" 0;
+
+  --radius:9px; --radius-sm:6px;
+  --speed:.13s;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--mono); color:var(--text); font-size:13px;
+  background:
+    radial-gradient(1200px 800px at 18% -10%, color-mix(in srgb,var(--mauve) 16%,transparent) 0%, transparent 55%),
+    radial-gradient(1100px 700px at 110% 10%, color-mix(in srgb,var(--sky) 14%,transparent) 0%, transparent 50%),
+    linear-gradient(135deg,var(--crust) 0%, var(--mantle) 60%, var(--crust) 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  display:flex; align-items:flex-start; justify-content:center; padding:22px;
+  transition:background var(--speed);
+}
+.preview-surface{
+  font-family:var(--pv-family),var(--mono);
+  font-variation-settings:'wght' var(--pv-wght);
+  font-size:var(--pv-size); line-height:var(--pv-lh);
+  letter-spacing:var(--pv-tracking); font-style:var(--pv-style);
+  font-feature-settings:var(--pv-feat);
+}
+
+/* ───────────────── window chrome ───────────────── */
+.window{
+  width:min(2040px,100%); height:calc(100vh - 44px);
+  display:flex; flex-direction:column; border-radius:11px; overflow:hidden;
+  background:color-mix(in srgb,var(--base) 97%, transparent);
+  backdrop-filter:blur(20px) saturate(1.15); -webkit-backdrop-filter:blur(20px) saturate(1.15);
+  box-shadow:0 0 0 1px rgba(180,190,254,.06),0 32px 80px -12px rgba(0,0,0,.72),0 8px 24px -8px rgba(0,0,0,.6);
+}
+.titlebar{display:flex;align-items:center;gap:12px;height:38px;padding:0 13px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--surface0) 60%,var(--mantle)),var(--mantle));
+  border-bottom:1px solid var(--crust);flex:none}
+.lights{display:flex;gap:8px}
+.lights i{width:12px;height:12px;border-radius:50%;display:block}
+.lights .r{background:#ff5f57}.lights .y{background:#febc2e}.lights .g{background:#28c840}
+.titlebar .brand{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--text);letter-spacing:.02em;display:flex;gap:8px;align-items:center}
+.titlebar .brand .glyph{color:var(--mauve)}
+.titlebar .grow{flex:1}
+.titlebar .hint{font-size:11px;color:var(--overlay1)}
+.titlebar .hint .kbd{margin-left:4px}
+
+/* shell layout: nav | main editor | live-preview dock (editor + dock share width equally) */
+.shell{display:grid;grid-template-columns:212px minmax(0,1fr) minmax(0,1fr);
+  grid-template-areas:"nav main dock";flex:1;min-height:0}
+.nav{grid-area:nav}
+.main{grid-area:main}
+.preview-dock{grid-area:dock}
+body.dock-collapsed .shell{grid-template-columns:212px minmax(0,1fr);grid-template-areas:"nav main"}
+body.dock-collapsed .preview-dock{display:none}
+.nav{
+  background:color-mix(in srgb,var(--mantle) 70%,transparent);
+  border-right:1px solid var(--crust);
+  display:flex;flex-direction:column;overflow-y:auto;padding:8px 0;flex:none;
+}
+.nav .nav-head{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--overlay0);
+  padding:8px 14px 6px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;
+  color:var(--subtext0);font-size:12.5px;border-left:3px solid transparent;
+  transition:all var(--speed);user-select:none;white-space:nowrap;
+}
+.nav-item .ico{width:18px;text-align:center;color:var(--overlay2);font-size:13px}
+.nav-item .num{margin-left:auto;font-size:10px;color:var(--overlay0)}
+.nav-item:hover{background:color-mix(in srgb,var(--surface0) 50%,transparent);color:var(--text)}
+.nav-item.active{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--text);
+  border-left:3px solid var(--accent)}
+.nav-item.active .ico{color:var(--accent)}
+
+.main{position:relative;overflow:hidden;display:flex;flex-direction:column;min-width:0;container-type:inline-size;container-name:main}
+.feature-panel{flex:1;overflow-y:auto;padding:20px 22px;display:none}
+.feature-panel.active{display:block}
+.feature-panel h2.pg-title{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+.feature-panel h2.pg-title .ico{color:var(--accent)}
+.feature-panel .pg-sub{color:var(--overlay1);font-size:12px;margin:3px 0 16px;max-width:70ch}
+
+/* status bar (tmux-like) */
+.statusbar{display:flex;align-items:stretch;height:25px;font-family:var(--mono);font-size:11.5px;
+  background:var(--mantle);border-top:1px solid var(--crust);flex:none;user-select:none}
+.statusbar .seg{display:flex;align-items:center;padding:0 11px}
+.statusbar .session{background:var(--accent);color:var(--crust);font-weight:700}
+.statusbar .grow{flex:1}
+.statusbar .right{margin-left:auto;display:flex}
+.statusbar .clock{background:var(--teal);color:var(--crust);font-weight:700}
+.statusbar .info{color:var(--subtext0)}
+.statusbar .save{color:var(--green)}
+
+/* ───────────────── components ───────────────── */
+.card{background:color-mix(in srgb,var(--surface0) 50%,transparent);border:1px solid var(--surface0);
+  border-radius:var(--radius);padding:14px 16px}
+.card > h4{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--subtext0);margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.card > h4 .accent{color:var(--accent)}
+.grid{display:grid;gap:14px}
+.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}
+.grid.c4{grid-template-columns:repeat(4,1fr)}
+.split{display:grid;grid-template-columns:minmax(260px,300px) 1fr;gap:16px}
+/* grids reflow on the ACTUAL panel width (accounts for the nav + preview dock),
+   not the viewport — so nothing is cramped and wide screens stay filled */
+@container main (max-width:620px){
+  .split,.grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}
+}
+@container main (min-width:620.01px) and (max-width:980px){
+  .grid.c3,.grid.c4{grid-template-columns:repeat(2,1fr)}
+}
+@container main (min-width:980.01px) and (max-width:1320px){
+  .grid.c4{grid-template-columns:repeat(3,1fr)}
+}
+/* fallback for browsers without container queries */
+@supports not (container-type:inline-size){
+  @media(max-width:880px){.split,.grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}}
+}
+
+.btn{font-family:var(--mono);font-size:11.5px;font-weight:500;cursor:pointer;padding:6px 11px;
+  border-radius:var(--radius-sm);border:1px solid var(--surface1);background:var(--surface0);
+  color:var(--subtext1);transition:all var(--speed);user-select:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--overlay0);color:var(--text)}
+.btn:active{transform:translateY(1px)}
+.btn.sel{background:color-mix(in srgb,var(--accent) 15%,var(--base));border-color:var(--accent);
+  border-bottom-width:2px;color:var(--text)}
+.btn.primary{background:color-mix(in srgb,var(--accent) 26%,var(--base));border-color:var(--accent);
+  color:var(--text);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.btn.ghost{background:transparent}
+.btn.preset{border-style:dashed}
+.btn[disabled]{opacity:.32;cursor:not-allowed;pointer-events:none}
+.btn-row{display:flex;flex-wrap:wrap;gap:6px}
+
+.chip{font-family:var(--mono);font-size:11px;cursor:pointer;user-select:none;padding:4px 9px;
+  border-radius:999px;border:1px solid var(--surface1);background:var(--surface0);color:var(--overlay2);
+  transition:all var(--speed);display:inline-flex;align-items:center;gap:6px}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--surface2);transition:all var(--speed)}
+.chip:hover{color:var(--text);border-color:var(--overlay0)}
+.chip.on{background:color-mix(in srgb,var(--green) 18%,var(--base));color:var(--green);
+  border-color:color-mix(in srgb,var(--green) 45%,transparent)}
+.chip.on::before{content:"✓";width:auto;height:auto;background:transparent;box-shadow:none;
+  color:var(--green);font-size:9px;font-weight:700;line-height:1}
+.chip .tag{color:var(--overlay0);font-size:10px}.chip.on .tag{color:color-mix(in srgb,var(--green) 80%,var(--text))}
+
+label.field{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--overlay1)}
+label.field .val{color:var(--accent);font-weight:700;float:right}
+label.field .row{display:flex;justify-content:space-between;align-items:center}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent) var(--fill,50%),var(--surface1) var(--fill,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--text);border:3px solid var(--accent);margin-top:-6px;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+input[type=range]:disabled{opacity:.3}
+input[type=range]:disabled::-webkit-slider-runnable-track{background:var(--surface1)}
+
+input[type=text],input[type=search],input[type=number],select,textarea{
+  font-family:var(--mono);font-size:12px;color:var(--text);background:var(--crust);
+  border:1px solid var(--surface1);border-radius:var(--radius-sm);padding:7px 10px;width:100%;outline:none;transition:border var(--speed)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[type=color]{width:34px;height:26px;padding:0;border:1px solid var(--surface1);border-radius:5px;background:none;cursor:pointer}
+select{appearance:none;cursor:pointer}
+
+.kbd{font-family:var(--mono);background:var(--surface0);border:1px solid var(--surface1);border-bottom-width:2px;
+  border-radius:5px;padding:1px 6px;font-size:.85em;color:var(--subtext1);white-space:nowrap}
+.tag-pill{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.05em;
+  padding:1px 7px;border-radius:999px;background:var(--surface0);color:var(--subtext1);border:1px solid var(--surface1)}
+.tag-pill.on{background:color-mix(in srgb,var(--green) 22%,var(--base));color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent)}
+.tag-pill.off{background:color-mix(in srgb,var(--red) 18%,var(--crust));color:var(--red);border-color:color-mix(in srgb,var(--red) 38%,transparent)}
+.tag-pill.on::before{content:"✓ "}.tag-pill.off::before{content:"✕ "}
+
+.codeblock{font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--subtext1);background:var(--crust);
+  border:1px solid var(--surface0);border-radius:var(--radius);padding:12px 14px;white-space:pre-wrap;overflow-x:auto;position:relative}
+.codeblock .prop{color:var(--sky)}.codeblock .v{color:var(--peach)}.codeblock .q{color:var(--green)}
+.codeblock .cmt{color:var(--overlay1);font-style:italic}.codeblock .key{color:var(--mauve)}.codeblock .sel-css{color:var(--blue)}
+
+.muted{color:var(--overlay1)}.cmt{color:var(--overlay1);font-style:italic}
+.dim{color:var(--overlay0)}
+hr.sep{border:none;border-top:1px dashed var(--surface1);margin:16px 0}
+.row-flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* preview stage used across features */
+.stage{border:1px solid var(--surface0);border-radius:var(--radius);overflow:hidden;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--surface0) 30%,var(--base)),var(--base));min-height:120px}
+.stage-body{padding:18px;color:var(--text)}
+.stage-foot{font-family:var(--mono);font-size:10px;color:var(--overlay0);text-align:right;padding:6px 10px;border-top:1px dashed var(--surface0)}
+
+/* ── fill: let control-light panels stretch their hero output to use the full
+   window height (no dead space on tall monitors). Opt-in via .feature-body.fill,
+   marking the growing element with .stage.grow or .card.grow. ── */
+.feature-panel.active{display:flex;flex-direction:column}
+.feature-body{min-width:0}
+.feature-body.fill{flex:1;min-height:0;display:flex;flex-direction:column}
+/* layout roots that should consume the remaining height */
+.feature-body.fill > .split,
+.feature-body.fill > .kb-wrap{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+.feature-body.fill > .ex-wrap{flex:1;min-height:0}
+.feature-body.fill > .split > *,
+.feature-body.fill > .kb-wrap > *{min-height:0}
+.feature-body.fill > .split > .stack{overflow:auto}
+/* a marked stage becomes a tall hero specimen */
+.feature-body.fill .stage.grow{flex:1;min-height:0;display:flex;flex-direction:column}
+.feature-body.fill .stage.grow > .stage-body{flex:1}
+/* a marked card grows and lets its scrollable child fill */
+.feature-body.fill .card.grow{flex:1;min-height:0}
+.feature-body.fill .card.grow > .codeblock{flex:1;min-height:0;overflow:auto}
+.feature-body.fill .card.grow > .kb-table{flex:1;min-height:0}
+.feature-body.fill > .ex-wrap > .ex-code{flex:1;max-height:none}
+/* when the panel stacks vertically (narrow main), don't force tall heroes */
+@container main (max-width:620px){
+  .feature-body.fill{flex:0 1 auto}
+  .feature-body.fill > .split,
+  .feature-body.fill > .kb-wrap{flex:0 1 auto;grid-template-rows:auto}
+  .feature-body.fill > .ex-wrap{flex:0 1 auto}
+  .feature-body.fill .stage.grow{flex:0 1 auto;min-height:240px}
+  .feature-body.fill .card.grow{flex:0 1 auto}
+  .feature-body.fill > .split > .stack{overflow:visible}
+  .feature-body.fill > .ex-wrap > .ex-code{flex:0 1 auto;max-height:58vh}
+}
+
+/* toast */
+#toast-host{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center}
+.toast{font-family:var(--mono);font-size:12px;background:var(--surface0);color:var(--text);border:1px solid var(--surface2);
+  border-left:3px solid var(--green);border-radius:var(--radius-sm);padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);
+  animation:toastin .2s ease}
+@keyframes toastin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* scrollbars */
+::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface1);border-radius:6px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--surface2);background-clip:content-box}
+
+/* modal (used by command-palette, presets-share, etc.) */
+.modal-backdrop{position:fixed;inset:0;background:rgba(8,8,14,.6);backdrop-filter:blur(3px);z-index:1000;
+  display:flex;align-items:flex-start;justify-content:center;padding-top:12vh}
+.modal{width:min(640px,92vw);background:var(--base);border:1px solid var(--surface1);border-radius:var(--radius);
+  box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden}
+
+/* ============================================================================
+   v2 — progressive disclosure (Simple/Expert), onboarding, shared utilities
+   ============================================================================ */
+
+/* mode-driven visibility. .adv-only = expert-only; .novice-only = simple-only */
+body[data-mode="novice"] .adv-only{display:none!important}
+body[data-mode="expert"] .novice-only{display:none!important}
+
+/* tabular figures for any changing numeric readout (Tufte: aligned digits) */
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+label.field .val,.codeblock,.kbd{font-variant-numeric:tabular-nums}
+
+/* in-panel progressive disclosure: <details class="disclosure"><summary>…</summary>…</details> */
+.disclosure{border:1px dashed var(--surface1);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--surface0) 26%,transparent)}
+.disclosure>summary{list-style:none;cursor:pointer;user-select:none;padding:8px 12px;display:flex;align-items:center;gap:8px;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--overlay1)}
+.disclosure>summary::-webkit-details-marker{display:none}
+.disclosure>summary::before{content:"▸";color:var(--accent);transition:transform var(--speed);display:inline-block}
+.disclosure[open]>summary::before{transform:rotate(90deg)}
+.disclosure>summary:hover{color:var(--text)}
+.disclosure>.disclosure-body{padding:4px 12px 12px;display:flex;flex-direction:column;gap:12px}
+
+/* mode toggle (titlebar segmented control) */
+.mode-seg{display:flex;border:1px solid var(--surface1);border-radius:999px;overflow:hidden;background:var(--mantle)}
+.mode-seg button{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.02em;cursor:pointer;
+  padding:3px 11px;border:none;background:transparent;color:var(--overlay1);transition:all var(--speed)}
+.mode-seg button:hover{color:var(--text)}
+.mode-seg button.on{background:color-mix(in srgb,var(--accent) 28%,var(--base));color:var(--text)}
+
+/* nav: label flexes so the number sticks right; "+N more in Expert" affordance */
+.nav-item .label{flex:1;overflow:hidden;text-overflow:ellipsis}
+.nav-more{display:flex;align-items:center;gap:9px;margin:6px 10px 2px;padding:7px 10px;cursor:pointer;
+  font-size:11px;color:var(--overlay0);border:1px dashed var(--surface1);border-radius:var(--radius-sm);
+  transition:all var(--speed);user-select:none}
+.nav-more .ico{width:18px;text-align:center;color:var(--accent);font-weight:700}
+.nav-more:hover{color:var(--text);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+
+/* ───────────────── onboarding walkthrough ───────────────── */
+.onb-backdrop{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-start;justify-content:center;
+  padding:7vh 18px;overflow-y:auto;background:rgba(8,8,14,.55);backdrop-filter:blur(5px);
+  transition:opacity .2s;animation:onbin .25s ease}
+@keyframes onbin{from{opacity:0}to{opacity:1}}
+.onb{width:min(740px,96vw);background:color-mix(in srgb,var(--base) 98%,transparent);
+  border:1px solid var(--surface1);border-radius:var(--radius);padding:22px 24px 18px;
+  box-shadow:0 32px 80px -12px rgba(0,0,0,.75),0 0 0 1px rgba(180,190,254,.06)}
+.onb-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.onb-glyph{font-size:30px;line-height:1;color:var(--accent)}
+.onb-title{font-family:var(--mono);font-size:21px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
+.onb-sub{color:var(--overlay1);font-size:12.5px;margin-top:3px;max-width:60ch}
+.onb-stage{border:1px solid var(--surface0);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--surface0) 30%,var(--base)),var(--base))}
+.onb-preview{color:var(--text)}
+.onb-sec-h{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--subtext0);margin:0 0 11px}
+.onb-sec-h .n{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
+  background:color-mix(in srgb,var(--accent) 26%,var(--base));color:var(--text);font-size:11px;border:1px solid var(--accent)}
+.qs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.qs-card{border:1px solid var(--surface1);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--surface0) 42%,transparent);
+  padding:11px 12px;cursor:pointer;transition:all var(--speed);user-select:none}
+.qs-card:hover{border-color:var(--overlay0)}
+.qs-card.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--base));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.qs-name{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--text)}
+.qs-blurb{font-size:11px;color:var(--overlay1);margin:3px 0 9px;min-height:28px}
+.qs-swatches{display:flex;gap:5px}
+.qs-swatches i{width:100%;height:14px;border-radius:3px;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.onb-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+@media(max-width:560px){.onb-modes{grid-template-columns:1fr}}
+.onb-mode{border:1px solid var(--surface1);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;
+  transition:all var(--speed);user-select:none}
+.onb-mode:hover{border-color:var(--overlay0)}
+.onb-mode.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--base));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.onb-mode-t{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)}
+.onb-mode-d{font-size:11px;color:var(--overlay1);margin-top:4px;line-height:1.45}
+.onb-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--surface1);padding-top:14px}
+.onb-skip{font-size:11.5px;color:var(--overlay0);cursor:pointer;user-select:none}
+.onb-skip:hover{color:var(--subtext1)}
+.onb-start{font-size:12.5px;padding:8px 16px}
+
+/* ============================================================================
+   live-preview dock — persistent terminal preview beside every panel (v2)
+   ============================================================================ */
+.preview-dock{display:flex;flex-direction:column;min-width:0;min-height:0;
+  background:color-mix(in srgb,var(--mantle) 55%,transparent);
+  border-left:1px solid var(--crust)}
+.preview-dock-head{display:flex;align-items:center;gap:8px;flex:none;height:34px;padding:0 12px;
+  border-bottom:1px solid var(--crust);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--surface0) 45%,var(--mantle)),var(--mantle))}
+.preview-dock-head .grow{flex:1}
+.preview-dock-head .pd-title{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--overlay1);font-weight:600;display:flex;align-items:center;gap:7px}
+.preview-dock-head .pd-glyph{color:var(--mauve)}
+.pd-collapse{background:transparent;border:1px solid transparent;color:var(--overlay1);cursor:pointer;
+  font-size:13px;line-height:1;padding:3px 7px;border-radius:7px;font-family:var(--mono);transition:all var(--speed)}
+.pd-collapse:hover{color:var(--text);border-color:var(--surface1);background:color-mix(in srgb,var(--surface0) 50%,transparent)}
+.preview-dock-body{flex:1;min-height:0;overflow:auto;padding:14px 14px 16px}
+.preview-dock-body .ms-toolbar{margin-bottom:10px}
+
+/* reopen tab — only visible when the dock is collapsed */
+.pd-reopen{display:none;position:absolute;top:46px;right:0;z-index:20;
+  background:color-mix(in srgb,var(--surface0) 70%,var(--mantle));color:var(--subtext0);
+  border:1px solid var(--surface1);border-right:none;border-radius:9px 0 0 9px;cursor:pointer;
+  font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 10px;
+  box-shadow:-6px 0 18px -10px rgba(0,0,0,.6);transition:all var(--speed)}
+.pd-reopen:hover{color:var(--text);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface0))}
+body.dock-collapsed .pd-reopen{display:block}
+.main{position:relative}
+
+/* narrow viewports: dock drops to a bottom row so the preview never disappears */
+@media(max-width:1180px){
+  .shell{grid-template-columns:200px minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr) minmax(190px,32vh);
+    grid-template-areas:"nav main" "nav dock"}
+  .preview-dock{border-left:none;border-top:1px solid var(--crust)}
+  body.dock-collapsed .shell{grid-template-rows:1fr;grid-template-areas:"nav main"}
+}
+@media(max-width:720px){
+  .shell{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) minmax(170px,30vh);
+    grid-template-areas:"nav" "main" "dock"}
+}
+
+/* ============================================================================
+   fluid window — fill the viewport on large screens, shrink gracefully (v2)
+   ============================================================================ */
+@media(max-width:1024px){ body{padding:14px} .window{height:calc(100vh - 28px)} }
+@media(max-width:900px){ .titlebar .hint{display:none} }
+@media(max-width:820px){ .titlebar .muted{display:none} }
+@media(max-width:640px){ body{padding:0} .window{height:100vh;border-radius:0} }
